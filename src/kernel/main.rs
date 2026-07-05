@@ -1,6 +1,7 @@
 #![no_std]
 #![no_main]
 
+mod shell;
 mod uart;
 
 use core::panic::PanicInfo;
@@ -18,17 +19,17 @@ pub extern "C" fn rust_main() -> ! {
         println!("omg im green dadabebadabe");
     }
 
-    loop {
-        if let Some(uart) = uart::get_uart() {
-            if let Some(byte) = uart.read_byte() {
-                if byte == b'\r' {
-                    uart.write_byte(b'\n');
-                } else {
-                    uart.write_byte(byte);
-                }
-            }
-        }
+    shell::echo_line();
+
+    loop {}
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn memset(dest: *mut u8, val: i32, count: usize) -> *mut u8 {
+    for i in 0..count {
+        *dest.add(i) = val as u8;
     }
+    dest
 }
 
 #[panic_handler]
