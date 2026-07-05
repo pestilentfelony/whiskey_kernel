@@ -1,0 +1,13 @@
+{
+  "sysroot": "true",
+  "crates": [
+    {
+      "root_module": "src/main.rs",
+      "edition": "2021",
+      "deps": [],
+      "cfg": ["no_std"],
+      "is_workspace_member": true,
+      "display_name": "whiskey_os"
+    }
+  ]
+}

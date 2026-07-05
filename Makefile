@@ -1,5 +1,6 @@
-RUSTC = /home/tulpa/Documents/Software/crosscompiledrustc/rust/build/x86_64-unknown-linux-gnu/stage2/bin/rustc
-SYSROOT = /home/tulpa/Documents/Software/crosscompiledrustc/rust/build/x86_64-unknown-linux-gnu/stage2
+RUSTC   = rustc
+SYSROOT = $(shell rustc --print sysroot)
+
 
 AS = riscv64-elf-as
 LD = riscv64-elf-ld
