@@ -1,9 +1,9 @@
 RUSTC   = rustc
 SYSROOT = $(shell rustc --print sysroot)
 
-
-AS = riscv64-elf-as
-LD = riscv64-elf-ld
+CROSS_PREFIX ?= $(shell if command -v riscv64-elf-as >/dev/null 2>&1; then echo riscv64-elf-; elif command -v riscv64-linux-gnu-as >/dev/null 2>&1; then echo riscv64-linux-gnu-; else echo riscv64-elf-; fi)
+AS = $(CROSS_PREFIX)as
+LD = $(CROSS_PREFIX)ld
 
 TARGET = riscv64gc-unknown-none-elf
 RUSTFLAGS = --target $(TARGET) --sysroot $(SYSROOT) -O -C panic=abort
