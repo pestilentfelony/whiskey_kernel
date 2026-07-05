@@ -2,6 +2,7 @@
 #![no_main]
 
 mod uart;
+mod vga_buffer;
 
 use core::panic::PanicInfo;
 
