@@ -1,7 +1,6 @@
 use core::fmt::{self, Write};
 use core::sync::atomic::Ordering;
 
-
 const UART_BASE: usize = 0x1000_0000;
 
 const THR: usize = 0; // Transmit Holding Register (write here to send)
@@ -44,7 +43,7 @@ impl Uart {
     fn write_ansi_code(&self, code: u8) {
         self.write_byte(0x1b); // ESC
         self.write_byte(b'[');
-        
+
         if code >= 100 {
             self.write_byte(b'1');
             self.write_byte(b'0' + (code - 100) as u8);
@@ -52,7 +51,7 @@ impl Uart {
             self.write_byte(b'0' + (code / 10) as u8);
             self.write_byte(b'0' + (code % 10) as u8);
         }
-        
+
         self.write_byte(b'm');
     }
 
@@ -76,7 +75,8 @@ impl Write for Uart {
 
 // Global UART instance
 static mut UART: Uart = Uart { base: UART_BASE };
-static UART_INITIALIZED: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool::new(false);
+static UART_INITIALIZED: core::sync::atomic::AtomicBool =
+    core::sync::atomic::AtomicBool::new(false);
 
 pub fn init_uart() {
     UART_INITIALIZED.store(true, Ordering::Release);
