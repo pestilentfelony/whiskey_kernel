@@ -3,12 +3,14 @@
 
 mod shell;
 mod uart;
+mod panic;
 
-use core::panic::PanicInfo;
 
 #[no_mangle]
 pub extern "C" fn rust_main() -> ! {
+
     uart::init_uart();
+
 
     println!("Hello World!");
 
@@ -21,18 +23,5 @@ pub extern "C" fn rust_main() -> ! {
 
     shell::echo_line();
 
-    loop {}
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn memset(dest: *mut u8, val: i32, count: usize) -> *mut u8 {
-    for i in 0..count {
-        *dest.add(i) = val as u8;
-    }
-    dest
-}
-
-#[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
     loop {}
 }
