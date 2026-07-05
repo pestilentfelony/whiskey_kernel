@@ -1,0 +1,27 @@
+# Build outputs
+/build/
+*.o
+*.a
+*.so
+*.elf
+*.bin
+*.img
+*.iso
+*.map
+*.out
+
+# Rust
+/target/
+**/*.rs.bk
+
+# Editor files
+.vscode/
+.idea/
+
+# OS / temp files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+*.log
