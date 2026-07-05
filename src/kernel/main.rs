@@ -18,4 +18,3 @@ pub extern "C" fn rust_main() -> ! {
 fn panic(_info: &PanicInfo) -> ! {
     loop {}
 }
-
