@@ -1,18 +1,21 @@
 #![no_std]
 #![no_main]
 
+mod uart;
+
 use core::panic::PanicInfo;
-const UART: *mut u8 = 0x1000_0000 as *mut u8;
+
+use crate::uart::Uart;
 
 #[no_mangle]
 pub extern "C" fn rust_main() -> ! {
-    for &b in b"HI\n" {
-        unsafe {
-            core::ptr::write_volatile(UART, b);
-        }
-    }
+    Uart::new(0x1000_0000).write_str_raw("Hello, world!\n");
+
     loop {}
 }
+
+
+
 
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
