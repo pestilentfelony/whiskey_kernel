@@ -2,7 +2,7 @@
   "sysroot": "true",
   "crates": [
     {
-      "root_module": "src/main.rs",
+      "root_module": "src/kernel/main.rs",
       "edition": "2021",
       "deps": [],
       "cfg": ["no_std"],

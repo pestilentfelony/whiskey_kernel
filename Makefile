@@ -12,12 +12,12 @@ BIN = build/kernel.elf
 
 all: $(BIN)
 
-$(BIN): src/entry.s src/main.rs linker.ld
+$(BIN): src/boot/entry.s src/kernel/main.rs linker.ld
 	@mkdir -p build
 	# Assemble the bootstrapper
-	$(AS) src/entry.s -o build/entry.o
+	$(AS) src/boot/entry.s -o build/entry.o
 	# Compile the Rust code into an object file
-	$(RUSTC) $(RUSTFLAGS) --emit=obj src/main.rs -o build/main.o
+	$(RUSTC) $(RUSTFLAGS) --emit=obj src/kernel/main.rs -o build/main.o
 	# Link them manually using the script
 	$(LD) -T linker.ld build/entry.o build/main.o -o $(BIN)
 
