@@ -2,16 +2,23 @@
 "What the fuck"
 */
 
-use crate::{panic, uart};
+use crate::{panic, timer, uart};
 use {print, println};
 
 pub fn run_shell() {
     let mut buffer = [0u8; 128];
     let mut len = 0usize;
+    let mut last_tick = timer::ticks();
 
     print_prompt();
 
     loop {
+        let ticks = timer::ticks();
+        if ticks != last_tick && ticks % 100 == 0 {
+            last_tick = ticks;
+            println!("tick {}", ticks);
+            print_prompt();
+        }
         if let Some(uart) = uart::get_uart() {
             if let Some(byte) = uart.read_byte() {
                 match byte {
@@ -90,5 +97,13 @@ fn handle_command(cmd: &[u8]) {
 }
 
 fn print_prompt() {
+    if let Some(uart) = uart::get_uart() {
+        uart.reset_color();
+    }
+
     print!("# ");
+
+    if let Some(uart) = uart::get_uart() {
+        uart.set_color(uart::COLOR_BRIGHT_YELLOW);
+    }
 }

@@ -55,14 +55,66 @@ trap_handler:
     j handle_exception
 
     handle_interrupt:
-        # TODO: handle hardware interrupt here.
-        # Registers: t0=mcause, t1=mepc, t2=mtval
+        # Handle machine-mode interrupts.
+        # t0 = mcause, t1 = mepc, t2 = mtval
+        andi t3, t0, 0x7ff      # extract interrupt cause code
+        li t4, 7                # machine timer interrupt
+        beq t3, t4, timer_interrupt
+        li t4, 11               # machine external interrupt
+        beq t3, t4, external_interrupt
+        j unknown_interrupt
+
+    timer_interrupt:
+        # Call the Rust timer interrupt handler.
+        call handle_timer_interrupt
+        j restore_and_return
+
+    external_interrupt:
+        # No external interrupt controller is handled yet
+        j restore_and_return
+
+    unknown_interrupt:
+        # Unknown interrupt; resume to avoid deadlock
         j restore_and_return
 
     handle_exception:
-        # TODO: handle synchronous exception here.
-        # Registers: t0=mcause, t1=mepc, t2=mtval
+        # Handle synchronous exceptions.
+        # t0 = mcause, t1 = mepc, t2 = mtval
+        andi t3, t0, 0x7ff      # extract exception code
+        li t4, 3                # breakpoint
+        beq t3, t4, exception_breakpoint
+        li t4, 2                # illegal instruction
+        beq t3, t4, exception_illegal_instruction
+        li t4, 5                # load access fault
+        beq t3, t4, exception_load_access
+        li t4, 7                # store/AMO access fault
+        beq t3, t4, exception_store_access
+        j unknown_exception
+
+    exception_breakpoint:
+        addi t1, t1, 4
+        csrw mepc, t1
         j restore_and_return
+
+    exception_illegal_instruction:
+        # Halt here on illegal instruction.
+        j trap_halt
+
+    exception_load_access:
+        # Faulting load address is in mtval.
+        j trap_halt
+
+    exception_store_access:
+        # Faulting store address is in mtval.
+        j trap_halt
+
+    unknown_exception:
+        # For any unhandled exception, halt for debugging.
+        j trap_halt
+
+    trap_halt:
+        wfi
+        j trap_halt
 
     # Restore saved registers and return
     restore_and_return:
