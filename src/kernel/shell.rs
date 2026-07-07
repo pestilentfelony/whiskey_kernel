@@ -5,7 +5,7 @@
 use crate::uart;
 use {print, println};
 
-pub fn echo_line() {
+pub fn run_shell() {
     let mut buffer = [0u8; 128];
     let mut len = 0usize;
 
