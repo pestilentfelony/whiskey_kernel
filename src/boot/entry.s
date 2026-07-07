@@ -6,7 +6,11 @@ _start:
     # QEMU's 'virt' machine puts RAM starting at 0x80000000.
     la sp, boot_stack_top
 
-    # 2. Jump to function
+    # 2. Set the machine-mode trap vector.
+    la t0, trap_handler
+    csrw mtvec, t0
+
+    # 3. Jump to function
     tail rust_main
 
 .section .bss.stack

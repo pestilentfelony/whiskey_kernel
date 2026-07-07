@@ -80,7 +80,7 @@ fn handle_command(cmd: &[u8]) {
             print!("\x1b[2J\x1b[H");
         }
         "panic" => {
-            println!("Triggering panic...");
+            println!("Triggering panic");
             panic::induce_panic();
         }
         _ => {

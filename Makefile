@@ -17,11 +17,12 @@ RUSTLIB = $(SYSROOT)/lib/rustlib/$(TARGET)/lib
 CORE_LIBS = $(wildcard $(RUSTLIB)/libcore-*.rlib) \
             $(wildcard $(RUSTLIB)/libcompiler_builtins-*.rlib)
 
-$(BIN): src/boot/entry.s src/kernel/main.rs linker.ld
+$(BIN): src/boot/entry.s src/boot/trap.s src/kernel/main.rs linker.ld
 	@mkdir -p build
 	$(AS) src/boot/entry.s -o build/entry.o
+	$(AS) src/boot/trap.s -o build/trap.o
 	$(RUSTC) $(RUSTFLAGS) --emit=obj src/kernel/main.rs -o build/main.o
-	$(LD) -T linker.ld build/entry.o build/main.o $(CORE_LIBS) -o $(BIN)
+	$(LD) -T linker.ld build/entry.o build/trap.o build/main.o $(CORE_LIBS) -o $(BIN)
 
 run: $(BIN)
 	qemu-system-riscv64 -machine virt -bios none -kernel build/kernel.elf -nographic
