@@ -19,3 +19,10 @@ boot_stack_lower_bound:
     .space 4096 * 4  # 16KB stack space
 .global boot_stack_top
 boot_stack_top:
+
+.section .bss.trap_stack
+.global trap_stack_lower_bound
+trap_stack_lower_bound:
+    .space 4096 * 4  # 16KB trap stack
+.global trap_stack_top
+trap_stack_top:
