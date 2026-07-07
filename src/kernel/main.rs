@@ -11,12 +11,7 @@ pub extern "C" fn rust_main() -> ! {
 
     uart::init_uart();
 
-    if let Some(uart) = uart::get_uart() {
-        uart.set_color(uart::COLOR_GREEN);
-        print!("Green text");
-        uart.reset_color();
-        println!("omg im green dadabebadabe");
-    }
+    println!("Type 'help' for commands.");
 
     shell::run_shell();
 
