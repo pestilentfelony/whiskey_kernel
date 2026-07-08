@@ -1,5 +1,5 @@
-use {print, println};
 use drivers::plic;
+use {print, println};
 
 static mut EXTERNAL_IRQ_PENDING: bool = false;
 
@@ -46,7 +46,7 @@ pub fn enable_interrupts() {
     // enable machine-mode interrupts, machine timer interrupt, and machine external interrupt
     unsafe {
         core::arch::asm!(
-            "li t0, 0x8",   // set MIE in mstatus
+            "li t0, 0x8", // set MIE in mstatus
             "csrs mstatus, t0",
             "li t0, 0x880", // set MTIE (0x80) and MEIE (0x800) in mie
             "csrs mie, t0",
@@ -73,7 +73,12 @@ pub extern "C" fn handle_external_interrupt() {
 }
 
 #[no_mangle]
-pub extern "C" fn rust_exception_handler(mcause: usize, mepc: usize, mtval: usize, regs: *const usize) {
+pub extern "C" fn rust_exception_handler(
+    mcause: usize,
+    mepc: usize,
+    mtval: usize,
+    regs: *const usize,
+) {
     let (kind, code) = trap_desc(mcause);
 
     println!("Exception caught:");

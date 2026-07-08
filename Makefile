@@ -7,7 +7,7 @@ TARGET = riscv64gc-unknown-none-elf
 RUSTFLAGS = --target $(TARGET) --sysroot $(SYSROOT) -O -C panic=abort
 BIN = build/kernel.elf
 
-VERSION := 0.0.5_alpha
+VERSION := 0.0.6_alpha
 
 export VERSION
 

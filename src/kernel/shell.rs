@@ -2,7 +2,7 @@
 "What the fuck"
 */
 
-use crate::{panic, drivers::timer, drivers::uart, drivers::plic};
+use crate::{drivers::plic, drivers::timer, drivers::uart, panic};
 use {print, println};
 
 pub fn run_shell() {
@@ -13,7 +13,7 @@ pub fn run_shell() {
 
     loop {
         // Heartbeat Testing. Won't be needed ever probably.
-        
+
         /*if timer::heartbeat_pending() {
             println!("[heartbeat]");
             print_prompt();
@@ -52,7 +52,6 @@ pub fn run_shell() {
 }
 
 fn handle_command(cmd: &[u8]) {
-
     let line = match core::str::from_utf8(cmd) {
         Ok(s) => s.trim(),
         Err(_) => {
