@@ -1,6 +1,24 @@
 use {print, println};
 use crate::plic;
 
+static mut EXTERNAL_IRQ_PENDING: bool = false;
+
+pub fn init() {
+    unsafe {
+        EXTERNAL_IRQ_PENDING = false;
+    }
+}
+
+pub fn external_irq_pending() -> bool {
+    unsafe { EXTERNAL_IRQ_PENDING }
+}
+
+pub fn clear_external_irq_pending() {
+    unsafe {
+        EXTERNAL_IRQ_PENDING = false;
+    }
+}
+
 fn trap_desc(cause: usize) -> (&'static str, usize) {
     let interrupt = (cause >> 63) & 1 != 0;
     let code = cause & 0x7ff;
@@ -38,22 +56,18 @@ pub fn enable_interrupts() {
 
 #[no_mangle]
 pub extern "C" fn handle_external_interrupt() {
-    // Claim the interrupt from PLIC for hart 0
     let irq = plic::claim(0);
-    
+
     if irq != 0 {
-        println!("External interrupt: IRQ {}", irq);
-        
-        // Dispatch based on IRQ number
-        match irq {
-            10 => {
-                println!("UART interrupt");
-            }
-            _ => {
-                println!("Unhandled external IRQ: {}", irq);
-            }
+        unsafe {
+            EXTERNAL_IRQ_PENDING = true;
         }
-        
+
+        match irq {
+            10 => {}
+            _ => {}
+        }
+
         plic::complete(0, irq);
     }
 }

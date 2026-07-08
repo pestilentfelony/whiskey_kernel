@@ -5,6 +5,7 @@ _start:
     # STACK POINTER
     # QEMU's VIRT puts RAM starting at 0x80000000.
     la sp, boot_stack_top
+    csrw mscratch, x0
 
     #  machine-mode trap vector
     la t0, trap_handler

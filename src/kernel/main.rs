@@ -21,8 +21,9 @@ pub extern "C" fn rust_main() -> ! {
     plic::set_priority(10, 1);      // Set UART (IRQ 10) priority to 1
     plic::enable_irq_for_hart(0, 10); // Enable UART interrupt for hart 0
     
+    trap::init();
     timer::init_timer();
-    trap::enable_interrupts();  // Enable all interrupts (timer + external)
+    trap::enable_interrupts();
 
     println!("Type 'help' for commands.");
 

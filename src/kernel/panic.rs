@@ -1,7 +1,7 @@
 use core::panic::PanicInfo;
 use {print, println};
 
-// Don't panic, I got it under control..not.
+
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     if let Some(location) = info.location() {
@@ -25,5 +25,5 @@ fn panic(info: &PanicInfo) -> ! {
 }
 
 pub fn induce_panic() {
-    panic!("SCRAM!!!");
+    panic!("Panic induced...for testing purposes.");
 }

@@ -72,17 +72,14 @@ trap_handler:
         j unknown_interrupt
 
     timer_interrupt:
-        # Call the Rust timer interrupt handler.
         call handle_timer_interrupt
         j restore_and_return
 
     external_interrupt:
-        # Call the Rust external interrupt handler.
         call handle_external_interrupt
         j restore_and_return
 
     unknown_interrupt:
-        # Unknown interrupt; resume to avoid deadlock
         j restore_and_return
 
     handle_exception:
