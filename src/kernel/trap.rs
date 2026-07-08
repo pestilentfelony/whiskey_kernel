@@ -1,4 +1,5 @@
 use {print, println};
+use crate::plic;
 
 fn trap_desc(cause: usize) -> (&'static str, usize) {
     let interrupt = (cause >> 63) & 1 != 0;
@@ -24,14 +25,36 @@ fn trap_desc(cause: usize) -> (&'static str, usize) {
 }
 
 pub fn enable_interrupts() {
-    // enable machine-mode interrupts and machine timer interrupt
+    // enable machine-mode interrupts, machine timer interrupt, and machine external interrupt
     unsafe {
         core::arch::asm!(
             "li t0, 0x8",   // set MIE in mstatus
             "csrs mstatus, t0",
-            "li t0, 0x80",  // set MTIE in mie
+            "li t0, 0x880", // set MTIE (0x80) and MEIE (0x800) in mie
             "csrs mie, t0",
         );
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn handle_external_interrupt() {
+    // Claim the interrupt from PLIC for hart 0
+    let irq = plic::claim(0);
+    
+    if irq != 0 {
+        println!("External interrupt: IRQ {}", irq);
+        
+        // Dispatch based on IRQ number
+        match irq {
+            10 => {
+                println!("UART interrupt");
+            }
+            _ => {
+                println!("Unhandled external IRQ: {}", irq);
+            }
+        }
+        
+        plic::complete(0, irq);
     }
 }
 

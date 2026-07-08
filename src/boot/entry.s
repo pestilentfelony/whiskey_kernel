@@ -2,11 +2,11 @@
 .global _start
 
 _start:
-    # 1. Set up the stack pointer.
-    # QEMU's 'virt' machine puts RAM starting at 0x80000000.
+    # STACK POINTER
+    # QEMU's VIRT puts RAM starting at 0x80000000.
     la sp, boot_stack_top
 
-    # 2. Set the machine-mode trap vector.
+    #  machine-mode trap vector
     la t0, trap_handler
     csrw mtvec, t0
 

@@ -47,7 +47,6 @@ trap_handler:
 
     # Handle the trap event
 
-    # Decompose the cause into interrupt bit and cause code.
     srli t4, t0, 63
     bnez t4, handle_interrupt
 
@@ -78,7 +77,8 @@ trap_handler:
         j restore_and_return
 
     external_interrupt:
-        # No external interrupt controller is handled yet
+        # Call the Rust external interrupt handler.
+        call handle_external_interrupt
         j restore_and_return
 
     unknown_interrupt:
