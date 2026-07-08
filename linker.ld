@@ -31,6 +31,13 @@ SECTIONS
         *(.bss .bss.*)
     } :data
 
+    
+    /* 1 MiB of memory, like god intended */
+    . = ALIGN(16);
+    _heap_start = .;
+    . = . + 0x100000;
+    _heap_end = .;
+
     /DISCARD/ : {
         *(.eh_frame)
     }

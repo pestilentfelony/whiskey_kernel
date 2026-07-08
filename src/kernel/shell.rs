@@ -2,7 +2,7 @@
 "What the fuck"
 */
 
-use crate::{panic, timer, uart};
+use crate::{panic, drivers::timer, drivers::uart, drivers::plic};
 use {print, println};
 
 pub fn run_shell() {
@@ -12,11 +12,12 @@ pub fn run_shell() {
     print_prompt();
 
     loop {
-        /* Heartbeat Testing. Won't be needed ever probably.
-        if timer::heartbeat_pending() {
+        // Heartbeat Testing. Won't be needed ever probably.
+        
+        /*if timer::heartbeat_pending() {
             println!("[heartbeat]");
             print_prompt();
-        } */
+        }  */
 
         if let Some(uart) = uart::get_uart() {
             if let Some(byte) = uart.read_byte() {
@@ -91,9 +92,6 @@ fn handle_command(cmd: &[u8]) {
         }
         "clear" => {
             print!("\x1b[2J\x1b[H");
-        }
-        "ticks" => {
-            println!("ticks: {}", timer::ticks());
         }
         "uptime" => {
             println!("uptime: {} heartbeat intervals", timer::uptime());

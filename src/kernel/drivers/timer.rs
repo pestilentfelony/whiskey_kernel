@@ -1,4 +1,5 @@
 use core::ptr::{read_volatile, write_volatile};
+use core::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
 const CLINT_BASE: usize = 0x0200_0000;
 const MTIMECMP: *mut u64 = (CLINT_BASE + 0x4000) as *mut u64;
@@ -6,14 +7,12 @@ const MTIME: *const u64 = (CLINT_BASE + 0x0bff8) as *const u64;
 const TIMER_INTERVAL: u64 = 100_000;
 const HEARTBEAT_INTERVAL: u64 = 100;
 
-static mut TICK_COUNT: u64 = 0;
-static mut HEARTBEAT_PENDING: bool = false;
+static TICK_COUNT: AtomicU64 = AtomicU64::new(0);
+static HEARTBEAT_PENDING: AtomicBool = AtomicBool::new(false);
 
 pub fn init_timer() {
-    unsafe {
-        TICK_COUNT = 0;
-        HEARTBEAT_PENDING = false;
-    }
+    TICK_COUNT.store(0, Ordering::Relaxed);
+    HEARTBEAT_PENDING.store(false, Ordering::Relaxed);
     set_next_timer();
 }
 
@@ -26,17 +25,15 @@ fn set_next_timer() {
 
 #[no_mangle]
 pub extern "C" fn handle_timer_interrupt() {
-    unsafe {
-        TICK_COUNT = TICK_COUNT.wrapping_add(1);
-        if TICK_COUNT % HEARTBEAT_INTERVAL == 0 {
-            HEARTBEAT_PENDING = true;
-        }
-        set_next_timer();
+    let tick_count = TICK_COUNT.fetch_add(1, Ordering::Relaxed).wrapping_add(1);
+    if tick_count % HEARTBEAT_INTERVAL == 0 {
+        HEARTBEAT_PENDING.store(true, Ordering::Relaxed);
     }
+    set_next_timer();
 }
 
 pub fn ticks() -> u64 {
-    unsafe { TICK_COUNT }
+    TICK_COUNT.load(Ordering::Relaxed)
 }
 
 pub fn uptime() -> u64 {
@@ -44,18 +41,11 @@ pub fn uptime() -> u64 {
 }
 
 pub fn heartbeat_pending() -> bool {
-    unsafe { HEARTBEAT_PENDING }
+    HEARTBEAT_PENDING.load(Ordering::Relaxed)
 }
 
 pub fn consume_heartbeat() -> bool {
-    unsafe {
-        if HEARTBEAT_PENDING {
-            HEARTBEAT_PENDING = false;
-            true
-        } else {
-            false
-        }
-    }
+    HEARTBEAT_PENDING.swap(false, Ordering::Relaxed)
 }
 
 pub fn wait_for_ticks(count: u64) {

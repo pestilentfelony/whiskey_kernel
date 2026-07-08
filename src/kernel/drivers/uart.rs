@@ -93,7 +93,7 @@ pub fn get_uart() -> Option<&'static mut Uart> {
 #[macro_export]
 macro_rules! print {
     ($($arg:tt)*) => {
-        if let Some(uart) = $crate::uart::get_uart() {
+        if let Some(uart) = $crate::drivers::uart::get_uart() {
             use core::fmt::Write;
             let _ = write!(uart, $($arg)*);
         }

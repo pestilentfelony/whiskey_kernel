@@ -1,5 +1,5 @@
 use {print, println};
-use crate::plic;
+use drivers::plic;
 
 static mut EXTERNAL_IRQ_PENDING: bool = false;
 
