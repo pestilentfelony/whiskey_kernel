@@ -10,12 +10,6 @@ _start:
     la t0, trap_handler
     csrw mtvec, t0
 
-    # 3. Enable machine timer interrupts.
-    li t0, 0x8          # MIE in mstatus
-    csrs mstatus, t0
-    li t0, 0x80         # MTIE in mie
-    csrs mie, t0
-
     # 4. Jump to function
     tail rust_main
 

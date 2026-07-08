@@ -41,17 +41,25 @@ trap_handler:
     sd gp, 24(sp)
     sd tp, 16(sp)
 
-    # Read trap CSRs for handler logic
     csrr t0, mcause   # trap cause (interrupt bit + exception code)
     csrr t1, mepc     # program counter at time of trap
     csrr t2, mtval    # faulting address
 
     # Handle the trap event
 
-    # Check interrupt bit (bit 63) in mcause
-    srli t4, t0, 63    # Shift right logical to get the interrupt bit
-    bnez t4, handle_interrupt  # If interrupt bit is set, branch
-    # Exception path: fall through to exception handler
+    # Decompose the cause into interrupt bit and cause code.
+    srli t4, t0, 63
+    bnez t4, handle_interrupt
+
+    andi t3, t0, 0x7ff
+    li t4, 3
+    beq t3, t4, exception_breakpoint
+    li t4, 2
+    beq t3, t4, exception_illegal_instruction
+    li t4, 5
+    beq t3, t4, exception_load_access
+    li t4, 7
+    beq t3, t4, exception_store_access
     j handle_exception
 
     handle_interrupt:
@@ -80,37 +88,30 @@ trap_handler:
     handle_exception:
         # Handle synchronous exceptions.
         # t0 = mcause, t1 = mepc, t2 = mtval
-        andi t3, t0, 0x7ff      # extract exception code
-        li t4, 3                # breakpoint
-        beq t3, t4, exception_breakpoint
-        li t4, 2                # illegal instruction
-        beq t3, t4, exception_illegal_instruction
-        li t4, 5                # load access fault
-        beq t3, t4, exception_load_access
-        li t4, 7                # store/AMO access fault
-        beq t3, t4, exception_store_access
-        j unknown_exception
-
-    exception_breakpoint:
-        addi t1, t1, 4
-        csrw mepc, t1
+        # Call into Rust to print diagnostics: (mcause, mepc, mtval, &saved_regs)
+        mv a0, t0
+        mv a1, t1
+        mv a2, t2
+        addi a3, sp, 16       # pointer to first saved register (tp at 16(sp))
+        call rust_exception_handler
         j restore_and_return
 
+    exception_breakpoint:
+        j handle_exception
+
     exception_illegal_instruction:
-        # Halt here on illegal instruction.
-        j trap_halt
+        j handle_exception
 
     exception_load_access:
-        # Faulting load address is in mtval.
-        j trap_halt
+        j handle_exception
 
     exception_store_access:
-        # Faulting store address is in mtval.
-        j trap_halt
+        j handle_exception
 
     unknown_exception:
-        # For any unhandled exception, halt for debugging.
-        j trap_halt
+        j handle_exception
+    
+    # literally just repeating shit
 
     trap_halt:
         wfi

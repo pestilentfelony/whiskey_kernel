@@ -7,8 +7,8 @@ const THR: usize = 0; // Transmit Holding Register (write here to send)
 const RBR: usize = 0; // Receive Buffer Register (read here to receive)
 const LSR: usize = 5; // Line Status Register
 
-const LSR_THRE: u8 = 1 << 5; // "Transmit Holding Register Empty" bit
-const LSR_DR: u8 = 1 << 0; // "Data Ready" bit
+const LSR_THRE: u8 = 1 << 5; // Transmit Holding Register Empty bit
+const LSR_DR: u8 = 1 << 0; // Data Ready bit
 
 pub struct Uart {
     base: usize,
@@ -41,7 +41,7 @@ impl Uart {
     }
 
     fn write_ansi_code(&self, code: u8) {
-        self.write_byte(0x1b); // ESC
+        self.write_byte(0x1b); // ESCAPE
         self.write_byte(b'[');
 
         if code >= 100 {

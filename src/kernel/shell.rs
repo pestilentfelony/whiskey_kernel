@@ -8,17 +8,10 @@ use {print, println};
 pub fn run_shell() {
     let mut buffer = [0u8; 128];
     let mut len = 0usize;
-    let mut last_tick = timer::ticks();
 
     print_prompt();
 
     loop {
-        let ticks = timer::ticks();
-        if ticks != last_tick && ticks % 100 == 0 {
-            last_tick = ticks;
-            println!("tick {}", ticks);
-            print_prompt();
-        }
         if let Some(uart) = uart::get_uart() {
             if let Some(byte) = uart.read_byte() {
                 match byte {
@@ -52,6 +45,7 @@ pub fn run_shell() {
 }
 
 fn handle_command(cmd: &[u8]) {
+
     let line = match core::str::from_utf8(cmd) {
         Ok(s) => s.trim(),
         Err(_) => {
@@ -77,7 +71,10 @@ fn handle_command(cmd: &[u8]) {
             println!("panic -> trigger a kernel panic");
         }
         "version" => {
-            println!("whiskey_os v{}", option_env!("VERSION").unwrap_or("unknown"));
+            println!(
+                "whiskey_os v{}",
+                option_env!("VERSION").unwrap_or("unknown")
+            );
         }
         "echo" => {
             let rest = &line[command.len()..].trim_start();
