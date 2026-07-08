@@ -75,7 +75,6 @@ fn handle_command(cmd: &[u8]) {
             println!("version -> show the version information");
             println!("echo -> print text back to the console");
             println!("clear -> clear the screen");
-            println!("ticks -> show the current timer tick count");
             println!("uptime -> show the approximate uptime in heartbeat intervals");
             println!("sleep <n> -> wait for n timer ticks");
             println!("panic -> trigger a kernel panic");
