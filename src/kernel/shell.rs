@@ -12,6 +12,12 @@ pub fn run_shell() {
     print_prompt();
 
     loop {
+        /* Heartbeat Testing. Won't be needed ever probably.
+        if timer::heartbeat_pending() {
+            println!("[heartbeat]");
+            print_prompt();
+        } */
+
         if let Some(uart) = uart::get_uart() {
             if let Some(byte) = uart.read_byte() {
                 match byte {
@@ -68,11 +74,14 @@ fn handle_command(cmd: &[u8]) {
             println!("version -> show the version information");
             println!("echo -> print text back to the console");
             println!("clear -> clear the screen");
+            println!("ticks -> show the current timer tick count");
+            println!("uptime -> show the approximate uptime in heartbeat intervals");
+            println!("sleep <n> -> wait for n timer ticks");
             println!("panic -> trigger a kernel panic");
         }
         "version" => {
             println!(
-                "whiskey_os v{}",
+                "whiskey_kernel v{}",
                 option_env!("VERSION").unwrap_or("unknown")
             );
         }
@@ -82,6 +91,25 @@ fn handle_command(cmd: &[u8]) {
         }
         "clear" => {
             print!("\x1b[2J\x1b[H");
+        }
+        "ticks" => {
+            println!("ticks: {}", timer::ticks());
+        }
+        "uptime" => {
+            println!("uptime: {} heartbeat intervals", timer::uptime());
+        }
+        "sleep" => {
+            let arg = parts.next().unwrap_or("0");
+            match arg.parse::<u64>() {
+                Ok(delay) => {
+                    println!("sleeping for {} ticks", delay);
+                    timer::wait_for_ticks(delay);
+                    println!("done");
+                }
+                Err(_) => {
+                    println!("usage: sleep <ticks>");
+                }
+            }
         }
         "panic" => {
             println!("Triggering panic");

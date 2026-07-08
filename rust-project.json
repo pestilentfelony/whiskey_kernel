@@ -7,7 +7,7 @@
       "deps": [],
       "cfg": ["no_std"],
       "is_workspace_member": true,
-      "display_name": "whiskey_os"
+      "display_name": "whiskey_kernel"
     }
   ]
 }
