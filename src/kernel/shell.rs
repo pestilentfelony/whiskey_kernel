@@ -109,7 +109,7 @@ fn handle_command(cmd: &[u8]) {
             }
         }
         "heap_debug" => {
-            crate::alloc::bump_alloc::debug_info();
+            crate::alloc::debug_info();
             
 
         }
