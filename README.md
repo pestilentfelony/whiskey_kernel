@@ -27,9 +27,13 @@ RISC-V assembly code. For other purposes, Pestilentfelony frowns upon it. This i
 <br>
 
 ## Prerequisites 
-#### Rust Toolchain, targetting "riscv64gc-unknown-none-elf".
-#### Emulator for Risc-V64 (qemu-system-riscv64)
-#### Additionally, rust-src.
+#### nightly Rust toolchain with the riscv64gc-unknown-none-elf target
+#### rust-src component installed
+#### RISC-V emulator qemu-system-riscv64
+
+## Quick start
+#### make to build
+#### make run to launch QEMU
 
 <br>
 <br>

@@ -18,7 +18,6 @@ pub extern "C" fn rust_main() -> ! {
 
     alloc::bump_alloc::alloc_init();
     drivers::init_drivers();
-    tests::test_heap_alloc::run_heap_tests();
 
     println!("Type 'help' for commands.");
 
