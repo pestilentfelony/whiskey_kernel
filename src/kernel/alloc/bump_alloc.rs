@@ -1,6 +1,11 @@
-use core::alloc::Layout;
+use core::alloc::{GlobalAlloc, Layout};
 use core::ptr;
 use core::sync::atomic::{AtomicUsize, Ordering};
+
+extern "C" {
+    static _heap_start: u8;
+    static _heap_end: u8;
+}
 
 pub struct BumpAllocator {
     heap_start: AtomicUsize,
@@ -73,10 +78,37 @@ impl BumpAllocator {
                 return ptr::null_mut();
             }
 
-            match self.next.compare_exchange(current, alloc_end, Ordering::AcqRel, Ordering::Relaxed) {
+            match self.next.compare_exchange(
+                current,
+                alloc_end,
+                Ordering::AcqRel,
+                Ordering::Relaxed,
+            ) {
                 Ok(_) => return aligned as *mut u8,
                 Err(next) => current = next,
             }
         }
+    }
+}
+
+unsafe impl GlobalAlloc for BumpAllocator {
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+        self.allocate_raw(layout)
+    }
+
+    unsafe fn dealloc(&self, _ptr: *mut u8, _layout: Layout) {
+        // Dealloc in a bump allocator...ROFL!!!
+    }
+}
+
+#[global_allocator]
+static ALLOCATOR: BumpAllocator = BumpAllocator::new();
+
+pub fn alloc_init() {
+    unsafe {
+        let start = &_heap_start as *const u8 as usize;
+        let end = &_heap_end as *const u8 as usize;
+
+        ALLOCATOR.init_bump_alloc(start, end);
     }
 }
