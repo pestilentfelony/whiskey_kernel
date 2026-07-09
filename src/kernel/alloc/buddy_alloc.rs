@@ -72,6 +72,15 @@ impl<'a, T> Drop for SpinlockGuard<'a, T> {
     }
 }
 
+// Spinlock has a gigantic problem that can result in a deadlock, solution listed in TODO
+
+
+/*
+A buddy allocator manages memory in 2^n. You pick minimum (32) and a maximum whole heap or close, 
+every allocation gets rounded up to the nearest power of two and served from a block of exactly that size */
+
+/* So, who's the buddy? Luckily, each block has a buddy with same 2^n that can merge together
+how romantic. */
 
 struct BuddyState {
     heap_start: usize,
@@ -79,6 +88,7 @@ struct BuddyState {
     max_order: usize,
     free_lists: [usize; NUM_ORDERS],
 }
+
 
 impl BuddyState {
     const fn new() -> Self {
@@ -133,6 +143,9 @@ impl BuddyState {
         false
     }
 
+
+    // Inlining can be ignored by the compiler, however it can result in a great boost of speed.
+    // Something obviously crucial in memory allocation.
     #[inline]
     fn block_size(order: usize) -> usize {
         MIN_BLOCK_SIZE << order

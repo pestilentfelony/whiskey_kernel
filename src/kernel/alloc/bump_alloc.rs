@@ -20,6 +20,7 @@ impl BumpAllocator {
         }
     }
 
+    // Ensures heap_start isn't greaer than heap_end which makes 0 sense.
     pub unsafe fn init_bump_alloc(&self, heap_start: usize, heap_end: usize) {
         debug_assert!(heap_start <= heap_end);
         self.heap_start.store(heap_start, Ordering::Relaxed);

@@ -1,3 +1,7 @@
+/* PLIC: Platform level Interrupt Controller
+The PLIC lets the kernel assign priority levels depending on urgency. */
+
+
 use core::ptr::{read_volatile, write_volatile};
 
 const PLIC_BASE: usize = 0x0C00_0000;
@@ -6,6 +10,8 @@ const PLIC_PENDING: usize = PLIC_BASE + 0x1000;
 const PLIC_ENABLE: usize = PLIC_BASE + 0x2000;
 const PLIC_CONTEXT_BASE: usize = PLIC_BASE + 0x200000;
 
+
+// Harts: Hardware threads. One hart = one logical CPU.
 pub fn init_plic_for_hart(hartid: usize) {
     unsafe {
         let threshold = (PLIC_CONTEXT_BASE + hartid * 0x1000) as *mut u32;
@@ -20,6 +26,10 @@ pub fn set_priority(irq: usize, prio: u32) {
     }
 }
 
+
+/*
+irq: interrupt request.
+it is the signal sent to actually perform the interrupt. this function enables this. */
 pub fn enable_irq_for_hart(hartid: usize, irq: usize) {
     unsafe {
         let byte_off = (irq / 32) * 4;
