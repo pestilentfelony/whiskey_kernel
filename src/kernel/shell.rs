@@ -76,6 +76,7 @@ fn handle_command(cmd: &[u8]) {
             println!("clear -> clear the screen");
             println!("uptime -> show the approximate uptime in heartbeat intervals");
             println!("sleep <n> -> wait for n timer ticks");
+            println!("heap_debug -> list debug info for memory");
             println!("panic -> trigger a kernel panic");
         }
         "version" => {
@@ -106,6 +107,11 @@ fn handle_command(cmd: &[u8]) {
                     println!("usage: sleep <ticks>");
                 }
             }
+        }
+        "heap_debug" => {
+            crate::alloc::bump_alloc::debug_info();
+            
+
         }
         "panic" => {
             println!("Triggering panic");

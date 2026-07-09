@@ -2,6 +2,8 @@ use core::alloc::{GlobalAlloc, Layout};
 use core::ptr;
 use core::sync::atomic::{AtomicUsize, Ordering};
 
+use crate::println;
+
 extern "C" {
     static _heap_start: u8;
     static _heap_end: u8;
@@ -104,6 +106,15 @@ unsafe impl GlobalAlloc for BumpAllocator {
 #[global_allocator]
 static ALLOCATOR: BumpAllocator = BumpAllocator::new();
 
+pub fn debug_info() {
+    let remaining_bytes = ALLOCATOR.remaining_bytes();
+    let used_bytes = ALLOCATOR.used_bytes();
+
+    println!("Remaining Bytes:{}",remaining_bytes);
+    println!("Used Bytes:{}",used_bytes);
+
+}
+
 pub fn alloc_init() {
     unsafe {
         let start = &_heap_start as *const u8 as usize;
@@ -112,3 +123,4 @@ pub fn alloc_init() {
         ALLOCATOR.init_bump_alloc(start, end);
     }
 }
+

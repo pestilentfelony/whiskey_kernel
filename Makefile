@@ -14,7 +14,8 @@ export VERSION
 all: $(BIN)
 
 RUSTLIB = $(SYSROOT)/lib/rustlib/$(TARGET)/lib
-CORE_LIBS = $(wildcard $(RUSTLIB)/libcore-*.rlib) \
+CORE_LIBS = $(wildcard $(RUSTLIB)/liballoc-*.rlib) \
+			$(wildcard $(RUSTLIB)/libcore-*.rlib) \
             $(wildcard $(RUSTLIB)/libcompiler_builtins-*.rlib)
 
 $(BIN): src/boot/entry.s src/boot/trap.s src/kernel/main.rs linker.ld
