@@ -1,3 +1,4 @@
+use core::arch::asm;
 use core::fmt::{self, Write};
 use core::sync::atomic::Ordering;
 
@@ -5,10 +6,12 @@ const UART_BASE: usize = 0x1000_0000;
 
 const THR: usize = 0; // Transmit Holding Register (write here to send)
 const RBR: usize = 0; // Receive Buffer Register (read here to receive)
+const IER: usize = 1; // Interrupt Enable Register
 const LSR: usize = 5; // Line Status Register
 
 const LSR_THRE: u8 = 1 << 5; // Transmit Holding Register Empty bit
 const LSR_DR: u8 = 1 << 0; // Data Ready bit
+const RX_BUFFER_SIZE: usize = 256;
 
 pub struct Uart {
     base: usize,
@@ -23,6 +26,64 @@ impl Uart {
         (self.base + offset) as *mut u8
     }
 
+    fn disable_interrupts() -> usize {
+        let mut mstatus: usize;
+        unsafe {
+            asm!("csrrc {0}, mstatus, 0x8", out(reg) mstatus);
+        }
+        mstatus
+    }
+
+    fn restore_interrupts(mask: usize) {
+        unsafe {
+            if mask & 0x8 != 0 {
+                asm!("csrs mstatus, 0x8");
+            } else {
+                asm!("csrc mstatus, 0x8");
+            }
+        }
+    }
+
+    fn push_rx_byte(&self, byte: u8) {
+        let prev = Self::disable_interrupts();
+        unsafe {
+            if RX_LEN < RX_BUFFER_SIZE {
+                RX_BUFFER[RX_TAIL] = byte;
+                RX_TAIL = (RX_TAIL + 1) % RX_BUFFER_SIZE;
+                RX_LEN += 1;
+            }
+        }
+        Self::restore_interrupts(prev);
+    }
+
+    fn pop_rx_byte(&self) -> Option<u8> {
+        let prev = Self::disable_interrupts();
+        let byte = unsafe {
+            if RX_LEN == 0 {
+                None
+            } else {
+                let byte = RX_BUFFER[RX_HEAD];
+                RX_HEAD = (RX_HEAD + 1) % RX_BUFFER_SIZE;
+                RX_LEN -= 1;
+                Some(byte)
+            }
+        };
+        Self::restore_interrupts(prev);
+        byte
+    }
+
+    fn drain_rx_fifo(&self) {
+        loop {
+            unsafe {
+                if core::ptr::read_volatile(self.reg(LSR)) & LSR_DR == 0 {
+                    break;
+                }
+                let byte = core::ptr::read_volatile(self.reg(RBR));
+                self.push_rx_byte(byte);
+            }
+        }
+    }
+
     pub fn write_byte(&self, byte: u8) {
         unsafe {
             while core::ptr::read_volatile(self.reg(LSR)) & LSR_THRE == 0 {}
@@ -31,13 +92,11 @@ impl Uart {
     }
 
     pub fn read_byte(&self) -> Option<u8> {
-        unsafe {
-            if core::ptr::read_volatile(self.reg(LSR)) & LSR_DR != 0 {
-                Some(core::ptr::read_volatile(self.reg(RBR)))
-            } else {
-                None
-            }
-        }
+        self.pop_rx_byte()
+    }
+
+    pub fn handle_interrupt(&self) {
+        self.drain_rx_fifo();
     }
 
     fn write_ansi_code(&self, code: u8) {
@@ -77,9 +136,22 @@ impl Write for Uart {
 static mut UART: Uart = Uart { base: UART_BASE };
 static UART_INITIALIZED: core::sync::atomic::AtomicBool =
     core::sync::atomic::AtomicBool::new(false);
+static mut RX_BUFFER: [u8; RX_BUFFER_SIZE] = [0; RX_BUFFER_SIZE];
+static mut RX_HEAD: usize = 0;
+static mut RX_TAIL: usize = 0;
+static mut RX_LEN: usize = 0;
 
 pub fn init_uart() {
+    unsafe {
+        core::ptr::write_volatile((UART_BASE + IER) as *mut u8, 0x01);
+    }
     UART_INITIALIZED.store(true, Ordering::Release);
+}
+
+pub fn handle_uart_interrupt() {
+    if let Some(uart) = get_uart() {
+        uart.handle_interrupt();
+    }
 }
 
 pub fn get_uart() -> Option<&'static mut Uart> {

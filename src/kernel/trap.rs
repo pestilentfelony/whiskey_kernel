@@ -1,4 +1,4 @@
-use drivers::plic;
+use drivers::{plic, uart};
 use {print, println};
 
 static mut EXTERNAL_IRQ_PENDING: bool = false;
@@ -64,7 +64,9 @@ pub extern "C" fn handle_external_interrupt() {
         }
 
         match irq {
-            10 => {}
+            10 => {
+                uart::handle_uart_interrupt();
+            }
             _ => {}
         }
 
