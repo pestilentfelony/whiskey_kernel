@@ -22,8 +22,7 @@ $(BIN): src/boot/entry.s src/boot/trap.s src/kernel/main.rs linker.ld
 	@mkdir -p build
 	$(AS) src/boot/entry.s -o build/entry.o
 	$(AS) src/boot/trap.s -o build/trap.o
-	$(RUSTC) $(RUSTFLAGS) --emit=obj src/kernel/main.rs -o build/main.o
-	$(LD) -T linker.ld build/entry.o build/trap.o build/main.o $(CORE_LIBS) -o $(BIN)
+	$(RUSTC) $(RUSTFLAGS) src/kernel/main.rs -C link-args='build/entry.o build/trap.o -T linker.ld' -o $(BIN)
 
 run: $(BIN)
 	qemu-system-riscv64 -machine virt -bios none -kernel build/kernel.elf -nographic

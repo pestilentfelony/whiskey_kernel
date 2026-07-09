@@ -1,5 +1,11 @@
+use core::alloc::Layout;
 use core::panic::PanicInfo;
 use {print, println};
+
+#[alloc_error_handler]
+fn alloc_error_handler(layout: Layout) -> ! {
+    panic!("allocation error: {:?}", layout);
+}
 
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
