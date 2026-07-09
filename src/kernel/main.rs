@@ -2,7 +2,6 @@
 #![no_main]
 #![feature(alloc_error_handler)]
 
-use crate::tests::test_heap_alloc::run_heap_tests;
 
 
 extern crate alloc as _alloc;
@@ -10,6 +9,7 @@ mod alloc;
 mod drivers;
 mod panic;
 mod shell;
+mod tasks;
 mod trap;
 mod tests;
 
@@ -21,8 +21,7 @@ pub extern "C" fn rust_main() -> ! {
 
     alloc::alloc_init();
     drivers::init_drivers();
-
-    run_heap_tests();
+    tasks::init();
     
     println!("Type 'help' for commands.");
 

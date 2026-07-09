@@ -2,7 +2,7 @@
 "What the fuck"
 */
 
-use crate::{drivers::plic, drivers::timer, drivers::uart, panic};
+use crate::{drivers::plic, drivers::timer, drivers::uart, panic, tasks};
 use {print, println};
 
 pub fn run_shell() {
@@ -77,6 +77,8 @@ fn handle_command(cmd: &[u8]) {
             println!("uptime -> show the approximate uptime in heartbeat intervals");
             println!("sleep <n> -> wait for n timer ticks");
             println!("heap_debug -> list debug info for memory");
+            println!("tasks -> show registered tasks");
+            println!("run_task -> run one scheduler round");
             println!("panic -> trigger a kernel panic");
         }
         "version" => {
@@ -110,8 +112,13 @@ fn handle_command(cmd: &[u8]) {
         }
         "heap_debug" => {
             crate::alloc::debug_info();
-            
-
+        }
+        "tasks" => {
+            tasks::dump_status();
+        }
+        "run_task" => {
+            tasks::run_scheduler_once();
+            println!("scheduler round complete");
         }
         "panic" => {
             println!("Triggering panic");
