@@ -3,7 +3,6 @@
 #![feature(alloc_error_handler)]
 
 
-
 extern crate alloc as _alloc;
 mod alloc;
 mod drivers;
@@ -22,6 +21,7 @@ pub extern "C" fn rust_main() -> ! {
     alloc::alloc_init();
     drivers::init_drivers();
     tasks::init();
+
     
     println!("Type 'help' for commands.");
 

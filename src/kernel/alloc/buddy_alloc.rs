@@ -5,9 +5,7 @@ use core::ptr;
 use core::sync::atomic::{AtomicBool, Ordering};
 
 /* TODO:
-disable interrupts while lock is held
-assert heap start > 0 
-switch to a double linked intrusive list 
+switch to a double linked intrusive list
  */
 
 /// Number of order-buckets we keep free lists for
@@ -28,6 +26,32 @@ unsafe impl<T: Send> Send for Spinlock<T> {}
 
 pub struct SpinlockGuard<'a, T> {
     lock: &'a Spinlock<T>,
+    interrupts_enabled: bool,
+}
+
+#[inline]
+fn check_interrupts_enabled() -> bool {
+    let mstatus: usize;
+
+    unsafe {
+        core::arch::asm!("csrr {}, mstatus", out(reg) mstatus);
+    }
+
+    (mstatus & (1 << 3)) != 0
+}
+
+#[inline]
+fn disable_interrupts() {
+    unsafe {
+        core::arch::asm!("csrc mstatus, 8");
+    }
+}
+
+#[inline]
+fn enable_interrupts() {
+    unsafe {
+        core::arch::asm!("csrs mstatus, 8");
+    }
 }
 
 impl<T> Spinlock<T> {
@@ -39,6 +63,11 @@ impl<T> Spinlock<T> {
     }
 
     pub fn lock(&self) -> SpinlockGuard<'_, T> {
+        let interrupts_enabled = check_interrupts_enabled();
+
+        if interrupts_enabled {
+            disable_interrupts();
+        }
         // Try to grab it
         while self
             .locked
@@ -49,7 +78,11 @@ impl<T> Spinlock<T> {
                 core::hint::spin_loop();
             }
         }
-        SpinlockGuard { lock: self }
+
+        SpinlockGuard {
+            lock: self,
+            interrupts_enabled,
+        }
     }
 }
 
@@ -69,14 +102,17 @@ impl<'a, T> DerefMut for SpinlockGuard<'a, T> {
 impl<'a, T> Drop for SpinlockGuard<'a, T> {
     fn drop(&mut self) {
         self.lock.locked.store(false, Ordering::Release);
+
+        if self.interrupts_enabled {
+            enable_interrupts();
+        }
     }
 }
 
-// Spinlock has a gigantic problem that can result in a deadlock, solution listed in TODO
-
+// End Spinlock
 
 /*
-A buddy allocator manages memory in 2^n. You pick minimum (32) and a maximum whole heap or close, 
+A buddy allocator manages memory in 2^n. You pick minimum (32) and a maximum whole heap or close,
 every allocation gets rounded up to the nearest power of two and served from a block of exactly that size */
 
 /* So, who's the buddy? Luckily, each block has a buddy with same 2^n that can merge together
@@ -88,7 +124,6 @@ struct BuddyState {
     max_order: usize,
     free_lists: [usize; NUM_ORDERS],
 }
-
 
 impl BuddyState {
     const fn new() -> Self {
@@ -142,7 +177,6 @@ impl BuddyState {
         }
         false
     }
-
 
     // Inlining can be ignored by the compiler, however it can result in a great boost of speed.
     // Something obviously crucial in memory allocation.
@@ -202,7 +236,7 @@ impl BuddyState {
         let mut addr = ptr as usize;
         let mut order = match self.order_for(layout) {
             Some(o) => o,
-            None => return, 
+            None => return,
         };
 
         // Try to merge upward as far as possible
@@ -220,7 +254,6 @@ impl BuddyState {
     }
 }
 
-
 pub struct BuddyAllocator {
     inner: Spinlock<BuddyState>,
 }
@@ -233,6 +266,7 @@ impl BuddyAllocator {
     }
 
     pub unsafe fn init_buddy_alloc(&self, heap_start: usize, heap_end: usize) {
+        assert!(heap_start != 0);
         debug_assert!(heap_start <= heap_end);
 
         let aligned_start = (heap_start + MIN_BLOCK_SIZE - 1) & !(MIN_BLOCK_SIZE - 1);
