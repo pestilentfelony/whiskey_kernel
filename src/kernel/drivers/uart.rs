@@ -91,6 +91,12 @@ impl Uart {
         }
     }
 
+    pub fn write_bytes(&self, bytes: &[u8]) {
+        for &byte in bytes {
+            self.write_byte(byte);
+        }
+    }
+
     pub fn read_byte(&self) -> Option<u8> {
         self.pop_rx_byte()
     }

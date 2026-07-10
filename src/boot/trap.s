@@ -59,6 +59,10 @@ trap_handler:
     beq t3, t4, exception_load_access
     li t4, 7
     beq t3, t4, exception_store_access
+    li t4, 8
+    beq t3, t4, exception_syscall
+    li t4, 11
+    beq t3, t4, exception_syscall
     j handle_exception
 
     handle_interrupt:
@@ -104,6 +108,19 @@ trap_handler:
 
     exception_store_access:
         j handle_exception
+
+    exception_syscall:
+        ld a0, 184(sp)       # syscall number in a0
+        ld a1, 176(sp)       # arg0
+        ld a2, 168(sp)       # arg1
+        ld a3, 160(sp)       # arg2
+        ld a4, 152(sp)       # arg3
+        mv a5, t1            # mepc for debug context
+        call rust_syscall_handler
+        sd a0, 184(sp)       # return value in saved a0 slot
+        addi t1, t1, 4
+        csrw mepc, t1
+        j restore_and_return
 
     unknown_exception:
         j handle_exception
