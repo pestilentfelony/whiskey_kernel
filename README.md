@@ -17,6 +17,16 @@ upon by other fellow developers.
 I guess you could call it GNU/whiskey. Yes, that was a funny joke.
 
 <br>
+#### Roadmap
+1 -> Finish buddy allocator, (info in TODO)
+2 -> define Userspace ABI (primarily a tiny syscall interface)
+3 -> memory isolation, simple page table setup
+4 -> replace tasks.rs with better process structure
+5 -> storage support (read from a disk iamge)
+5.5 -> simple read-only filesystem (w/dierctory table, some files)
+6 -> add an elf loader to parse simple elf binaries
+7 -> add syscall layer for writing, exiting (+ reading later)
+<br>
 
 
 #### Does this project use AI?
