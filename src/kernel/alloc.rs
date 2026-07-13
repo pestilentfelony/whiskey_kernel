@@ -10,8 +10,10 @@ extern "C" {
 
 
 #[global_allocator]
-//static ALLOCATOR: bump_alloc::BumpAllocator = bump_alloc::BumpAllocator::new();
 static ALLOCATOR: buddy_alloc::BuddyAllocator = buddy_alloc::BuddyAllocator::new();
+
+//static ALLOCATOR: bump_alloc::BumpAllocator = bump_alloc::BumpAllocator::new();
+
 
 
 pub fn debug_info() {

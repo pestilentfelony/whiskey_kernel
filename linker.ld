@@ -33,7 +33,7 @@ SECTIONS
 
     
     /* 1 MiB of memory, like god intended */
-    . = ALIGN(16);
+    . = ALIGN(64);
     _heap_start = .;
     . = . + 0x100000;
     _heap_end = .;

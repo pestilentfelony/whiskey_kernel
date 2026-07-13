@@ -125,6 +125,8 @@ struct BuddyState {
     free_lists: [usize; NUM_ORDERS],
 }
 
+const FREE_MAGIC: usize = 0xF4EE_B10C;
+
 impl BuddyState {
     const fn new() -> Self {
         BuddyState {
@@ -139,14 +141,53 @@ impl BuddyState {
     fn read_next(addr: usize) -> usize {
         unsafe { ptr::read(addr as *const usize) }
     }
-
     #[inline]
     fn write_next(addr: usize, next: usize) {
         unsafe { ptr::write(addr as *mut usize, next) };
     }
+    #[inline]
+    fn read_prev(addr: usize) -> usize {
+        unsafe { ptr::read((addr + core::mem::size_of::<usize>() * 2) as *const usize) }
+    }
+    #[inline]
+    fn write_prev(addr: usize, prev: usize) {
+        unsafe {
+            ptr::write(
+                (addr + core::mem::size_of::<usize>() * 2) as *mut usize,
+                prev,
+            )
+        };
+    }
+    #[inline]
+    fn read_magic(addr: usize) -> usize {
+        unsafe { ptr::read((addr + core::mem::size_of::<usize>()) as *const usize) }
+    }
+    #[inline]
+    fn write_tag(addr: usize, order: usize) {
+        unsafe {
+            ptr::write(
+                (addr + core::mem::size_of::<usize>()) as *mut usize,
+                FREE_MAGIC ^ order,
+            );
+        }
+    }
+    #[inline]
+    fn tag_matches(addr: usize, order: usize) -> bool {
+        Self::read_magic(addr) == (FREE_MAGIC ^ order)
+    }
+    #[inline]
+    fn clear_tag(addr: usize) {
+        unsafe { ptr::write((addr + core::mem::size_of::<usize>()) as *mut usize, 0) };
+    }
 
     fn push_free(&mut self, order: usize, addr: usize) {
-        Self::write_next(addr, self.free_lists[order]);
+        let head = self.free_lists[order];
+        Self::write_next(addr, head);
+        Self::write_prev(addr, 0);
+        Self::write_tag(addr, order);
+        if head != 0 {
+            Self::write_prev(head, addr);
+        }
         self.free_lists[order] = addr;
     }
 
@@ -155,27 +196,32 @@ impl BuddyState {
         if head == 0 {
             return None;
         }
-        self.free_lists[order] = Self::read_next(head);
+        let next = Self::read_next(head);
+        self.free_lists[order] = next;
+        if next != 0 {
+            Self::write_prev(next, 0);
+        }
+        Self::clear_tag(head);
         Some(head)
     }
 
-    /// remove a specific address from an orders free list
     fn remove_free(&mut self, order: usize, target: usize) -> bool {
-        let mut cur = self.free_lists[order];
-        if cur == target {
-            self.free_lists[order] = Self::read_next(cur);
-            return true;
+        if target == 0 || !Self::tag_matches(target, order) {
+            return false;
         }
-        while cur != 0 {
-            let next = Self::read_next(cur);
-            if next == target {
-                let after_target = Self::read_next(target);
-                Self::write_next(cur, after_target);
-                return true;
-            }
-            cur = next;
+        let prev = Self::read_prev(target);
+        let next = Self::read_next(target);
+
+        if prev != 0 {
+            Self::write_next(prev, next);
+        } else {
+            self.free_lists[order] = next;
         }
-        false
+        if next != 0 {
+            Self::write_prev(next, prev);
+        }
+        Self::clear_tag(target);
+        true
     }
 
     // Inlining can be ignored by the compiler, however it can result in a great boost of speed.

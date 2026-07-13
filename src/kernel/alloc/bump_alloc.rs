@@ -40,7 +40,7 @@ impl BumpAllocator {
         current.saturating_sub(start)
     }
 
-    pub fn remaining_bytes(&self) -> usize {
+    pub fn free_bytes(&self) -> usize {
         let current = self.next.load(Ordering::Relaxed);
         let end = self.heap_end.load(Ordering::Relaxed);
         end.saturating_sub(current)

@@ -19,9 +19,9 @@ I guess you could call it GNU/whiskey. Yes, that was a funny joke.
 <br>
 
 #### Roadmap
-1 -> Finish buddy allocator, (info in TODO)
+1 -> Finish buddy allocator (DONE)
 
-2 -> define Userspace ABI (primarily a tiny syscall interface)
+2 -> define Userspace ABI (primarily a tiny syscall interface) (IN PROGRESS)
 
 3 -> memory isolation, simple page table setup
 
